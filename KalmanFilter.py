@@ -34,6 +34,13 @@ predicted_state = GeneratePredictedState(0)
 def GenerateProcessCovariance(positionError, velocityError):
     return np.array([[positionError ** 2, 0], [0, velocityError ** 2]])
 
-processCovMatrix = GenerateProcessCovariance(x_cvError, v_cvError)
+initProcessCovMatrix = GenerateProcessCovariance(x_cvError, v_cvError)
 
+
+def GeneratePredictedProcessCovariance():
+    x = np.matmul(stateMatrix, initProcessCovMatrix)
+    y = np.matmul(x, np.transpose(stateMatrix))
+    return np.diag(np.diag(y)) #Approximating non-diagonal terms to 0
+
+processCovMatrix = GeneratePredictedProcessCovariance()
 
