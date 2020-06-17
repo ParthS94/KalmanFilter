@@ -1,4 +1,6 @@
 import numpy as np
+from numpy.linalg import inv
+
 
 positionObserved = np.array([4000, 4260, 4550, 4860, 5110])
 velocityObserved = np.array([280, 282, 285, 286, 290])
@@ -44,3 +46,30 @@ def GeneratePredictedProcessCovariance():
 
 processCovMatrix = GeneratePredictedProcessCovariance()
 
+H = np.identity(2)
+def KalmanGain(positionObvError, velObvError):
+    obvError = np.array([[positionObvError**2, 0], [0, velObvError**2]])
+    numerator = np.matmul(processCovMatrix, np.transpose(H))
+    denominator = np.matmul(np.transpose(H), processCovMatrix)
+    denominator = np.matmul(denominator, np.transpose(H))
+    denominator = np.add(denominator, obvError)
+    return np.matmul(numerator, inv(denominator))
+
+GainMatrix = KalmanGain(x_obError, v_obError)
+
+nextObservation = np.array([[positionObserved[1]], [velocityObserved[1]]])
+
+def calculateCurrentState():
+    currentState = nextObservation - predicted_state  # Note that since H is the identity matrix, I have simplified the calculation
+    currentState = np.matmul(GainMatrix, currentState)
+    currentState = predicted_state + currentState
+    return currentState
+
+current_state = calculateCurrentState()
+
+def updateCovMatrix():
+    update = np.identity(2) - GainMatrix #Similar simplification of H
+    update = np.matmul(update, processCovMatrix)
+    return update
+
+updatedMatrix = updateCovMatrix()
